@@ -36,3 +36,47 @@ namespace ecl{
 		return 1.0f;
 	}
 }
+
+// Vector that only store nonzero elements,
+// which indices are specified as parameter pack
+template<typename Type, size_t... Idxs>
+class SparseVector {
+private:
+	static constexpr size_t N = sizeof...(Idxs);
+	static constexpr size_t _indices[N] {Idxs...};
+	matrix::Vector<Type, N> _data {};
+
+	static constexpr size_t findInverseIndex(size_t index, size_t range = N) {
+		assert(range != 0);
+		const size_t last_elem = range - 1;
+		return (_indices[last_elem] == index) ? last_elem : findInverseIndex(index, range - 1);
+	}
+
+public:
+	constexpr size_t size() const { return N; }
+	constexpr size_t index(size_t i) const { return SparseVector::_indices[i]; }
+
+	SparseVector() {}
+
+	SparseVector(const matrix::Vector<Type, N>& data) {
+		_data = data;
+	}
+
+	inline Type operator()(size_t i) const {
+		return _data(findInverseIndex(i));
+	}
+
+	inline Type& operator()(size_t i) {
+		return _data(findInverseIndex(i));
+	}
+
+	void setZero() {
+		_data.setZero();
+	}
+};
+
+template<typename Type, size_t... Idxs>
+constexpr size_t SparseVector<Type, Idxs...>::_indices[SparseVector<Type, Idxs...>::N];
+
+template<size_t ... Idxs>
+using SparseVectorf = SparseVector<float, Idxs...>;

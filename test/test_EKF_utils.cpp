@@ -41,6 +41,7 @@
 #include <cmath>
 #include <vector>
 
+#include "EKF/ekf.h"
 #include "EKF/utils.hpp"
 
 TEST(eclPowfTest, compareToStandardImplementation)
@@ -54,4 +55,31 @@ TEST(eclPowfTest, compareToStandardImplementation)
 				  std::pow(basis, static_cast<float>(exponent)));
 		}
 	}
+}
+
+TEST(SparseVectorTest, initialization) {
+	SparseVectorf<4, 6> a;
+	EXPECT_EQ(a.size(), 2);
+	EXPECT_EQ(a.index(0), 4);
+	EXPECT_EQ(a.index(1), 6);
+	EXPECT_DEATH(a(0) = 1.f, ".*");
+	EXPECT_DEATH(a(7) = 1.f, ".*");
+	a(4) = 1.f;
+	a(6) = 2.f;
+}
+
+TEST(SparseVectorTest, initializationWithVector) {
+	Vector3f vec(1.f, 2.f, 3.f);
+	SparseVectorf<4, 6, 22> a(vec);
+	EXPECT_EQ(a.size(), 3);
+	EXPECT_EQ(a.index(0), 4);
+	EXPECT_EQ(a.index(1), 6);
+	EXPECT_EQ(a.index(2), 22);
+	EXPECT_FLOAT_EQ(a(4), vec(0));
+	EXPECT_FLOAT_EQ(a(6), vec(1));
+	EXPECT_FLOAT_EQ(a(22), vec(2));
+	a.setZero();
+	EXPECT_FLOAT_EQ(a(4), 0.f);
+	EXPECT_FLOAT_EQ(a(6), 0.f);
+	EXPECT_FLOAT_EQ(a(22), 0.f);
 }
